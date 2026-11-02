@@ -1,0 +1,33 @@
+# ==============================================================================
+# docker-compose.yml — Local & Cloud Single-Node Orchestration
+# ==============================================================================
+version: "3.8"
+
+services:
+  walmart-ai-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: walmart_demand_inventory_ai
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8000
+      - ENVIRONMENT=production
+      - LOG_LEVEL=INFO
+      - HISTORY_DAYS=180
+      - SAMPLE_STORES=CA_1,TX_1,WI_1
+      - DEFAULT_HOLDING_COST=0.20
+      - DEFAULT_STOCKOUT_COST=2.00
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    volumes:
+      # Optional: mount data volume if updating CSVs dynamically
+      - ./data:/app/data:ro
+

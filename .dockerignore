@@ -1,0 +1,39 @@
+# ==============================================================================
+# .dockerignore — Docker Build Context Exclusions
+# ==============================================================================
+
+# Git metadata
+.git/
+.gitignore
+
+# Python caches & virtual environments
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+.venv/
+env/
+
+# Environment files with secrets (pass via docker run -e or docker-compose)
+.env
+.env.local
+
+# Notebooks & IDE configurations
+.ipynb_checkpoints
+notebooks/
+.vscode/
+.idea/
+
+# Testing & Logs
+test_pipeline.py
+*.log
+.pytest_cache/
+.coverage
+
+# Temporary files
+*.tmp
+*.bak
+test.pdf
+generate_workflow_pdf.py
+

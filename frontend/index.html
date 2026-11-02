@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Walmart Demand Forecasting & Inventory Optimization Platform</title>
+  <meta name="description" content="AI-Powered Retail Demand Forecasting & OR-Tools Multi-Echelon Inventory Optimization Platform.">
+
+  <!-- Inter Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap">
+
+  <!-- Charting Engines: Chart.js & Plotly -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.plot.ly/plotly-2.30.0.min.js"></script>
+
+  <!-- Modern Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ── Top Navbar ──────────────────────────────────────────────────────── -->
+  <header class="navbar">
+    <div class="logo">
+      <div class="logo-icon">🛒</div>
+      <span>Walmart Demand &amp; Inventory AI</span>
+    </div>
+    <div class="nav-right">
+      <span class="badge badge-blue">M5 Benchmark Dataset</span>
+      <span class="badge badge-green" id="system-status-badge"><span class="pulse-dot"></span> System Live</span>
+
+    </div>
+  </header>
+
+  <!-- ── Left Sidebar Navigation ─────────────────────────────────────────── -->
+  <aside class="sidebar">
+    <div class="sidebar-section">Analytics &amp; Planning</div>
+
+    <button class="nav-item active" data-page="overview">
+      <span class="icon">📊</span> Overview
+    </button>
+    <button class="nav-item" data-page="forecast">
+      <span class="icon">📈</span> Demand Forecast
+    </button>
+    <button class="nav-item" data-page="compare">
+      <span class="icon">⚖️</span> Model Benchmarking
+    </button>
+    <button class="nav-item" data-page="inventory">
+      <span class="icon">📦</span> Order Optimization
+    </button>
+    <button class="nav-item" data-page="hierarchy">
+      <span class="icon">🔗</span> Hierarchical View
+    </button>
+
+    <div class="sidebar-section" style="margin-top:auto;">Architecture</div>
+    <div style="padding:10px 14px;font-size:0.78rem;color:var(--text-sec);line-height:1.9;background:rgba(255,255,255,0.02);border-radius:8px;border:1px solid var(--border);">
+      ⚡ <strong>FastAPI</strong> Async Backend<br>
+      🌳 <strong>LightGBM</strong> Gradient Trees<br>
+      📈 <strong>Prophet</strong> + SNAP Regressors<br>
+      🧠 <strong>TFT</strong> Deep Transformer<br>
+      🔗 <strong>Darts</strong> Reconciliation<br>
+      🎯 <strong>OR-Tools</strong> GLOP Optimizer
+    </div>
+  </aside>
+
+  <!-- ── Main Workspace Content Area ──────────────────────────────────────── -->
+  <main class="main-content" id="main-content">
+    <div class="spinner-wrap" style="height:60vh;">
+      <div class="spinner"></div>
+      <span>Initializing AI Demand Platform…</span>
+    </div>
+  </main>
+
+</div>
+
+<!-- ── Toast System ───────────────────────────────────────────────────────── -->
+<div id="toast-container"></div>
+
+<!-- ── Application Scripts ────────────────────────────────────────────────── -->
+<script src="js/api.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/main.js"></script>
+
+</body>
+</html>

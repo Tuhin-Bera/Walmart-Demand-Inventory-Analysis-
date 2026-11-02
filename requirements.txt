@@ -1,0 +1,22 @@
+# Root-level requirements — mirrors backend/requirements.txt
+# Install with: pip install -r requirements.txt
+
+# ── Web framework & API ────────────────────────────────────────────────────────
+fastapi>=0.110.0
+uvicorn[standard]>=0.29.0
+python-multipart>=0.0.9
+python-dotenv>=1.0.0
+
+# ── Data processing & Download ────────────────────────────────────────────────
+pandas>=2.0.0
+numpy>=1.26.0
+scikit-learn>=1.4.0
+requests>=2.31.0
+gdown>=5.1.0
+
+# ── Forecasting & Optimization ────────────────────────────────────────────────
+prophet>=1.1.5
+lightgbm>=4.3.0
+ortools>=9.9.0
+plotly>=5.20.0
+

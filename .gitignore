@@ -1,0 +1,111 @@
+# ==============================================================================
+# .gitignore — Walmart Demand Forecasting & Inventory Optimization Platform
+# ==============================================================================
+
+# ── Environment & Secrets ─────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*.cert
+
+# ── Python Bytecode & Optimization Caches ─────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ── Virtual Environments ──────────────────────────────────────────────────────
+venv/
+.venv/
+env/
+.env/
+ENV/
+env.bak/
+venv.bak/
+
+# ── Jupyter Notebook Checkpoints & Outputs ────────────────────────────────────
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+profile_default/
+ipython_config.py
+
+# ── Testing, Coverage & Type Checking ─────────────────────────────────────────
+.pytest_cache/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+htmlcov/
+.tox/
+.nox/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ── Operating System & Editor Files ───────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# IDEs & Editors
+.vscode/
+!.vscode/settings.json
+!.vscode/launch.json
+.idea/
+*.sublime-workspace
+*.sublime-project
+*.swp
+*.swo
+*~
+
+# ── Logs & Runtime Artifacts ──────────────────────────────────────────────────
+*.log
+logs/
+*.pid
+*.seed
+*.pid.lock
+
+# ── Model Checkpoints & Large Temporary Artifacts ─────────────────────────────
+backend/saved_models/*
+!backend/saved_models/.gitkeep
+*.pt
+*.ckpt
+*.pkl
+*.tmp
+*.bak
+
+# ── Large Datasets (>100MB cannot be committed to GitHub) ─────────────────────
+# Exclude large M5 CSVs; calendar.csv is small (~100KB) and safe for git
+data/*.csv
+!data/calendar.csv
+!data/.gitkeep
+
