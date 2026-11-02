@@ -32,7 +32,7 @@ from pathlib import Path
 from typing import Optional, List, Dict, Tuple, Any
 
 from backend.config import (
-    SALES_TRAIN_VALIDATION, CALENDAR_FILE, SELL_PRICES_FILE,
+    DATA_DIR, SALES_TRAIN_VALIDATION, CALENDAR_FILE, SELL_PRICES_FILE,
     SAMPLE_STORES, LAG_DAYS, ROLLING_WINDOWS, N_EVAL_DAYS,
     HISTORY_DAYS
 )
@@ -48,6 +48,16 @@ _cached_summary: Optional[Dict[str, Any]] = None
 # ─────────────────────────────────────────────────────────────────────────────
 # 1. Raw Data Loading Helpers
 # ─────────────────────────────────────────────────────────────────────────────
+
+def _check_and_ensure_files():
+    """Verify raw files exist, triggering automatic cloud download if missing."""
+    if not CALENDAR_FILE.exists() or not SELL_PRICES_FILE.exists() or not SALES_TRAIN_VALIDATION.exists():
+        try:
+            from backend.services.data_downloader import ensure_data_files
+            ensure_data_files(DATA_DIR)
+        except Exception as e:
+            logger.error(f"Error ensuring dataset files are present: {e}")
+
 
 def load_calendar() -> pd.DataFrame:
     """
@@ -66,6 +76,7 @@ def load_calendar() -> pd.DataFrame:
     Returns:
         pd.DataFrame: Cleaned calendar table with standardized event and SNAP indicators.
     """
+    _check_and_ensure_files()
     cal = pd.read_csv(CALENDAR_FILE, parse_dates=["date"])
     
     # Ensure SNAP flags are numeric integers (1 = SNAP benefits active on this day, 0 = inactive)
@@ -96,6 +107,7 @@ def load_sell_prices(sample_stores: Optional[List[str]] = SAMPLE_STORES) -> pd.D
     Returns:
         pd.DataFrame: Filtered price table with columns ['store_id', 'item_id', 'wm_yr_wk', 'sell_price'].
     """
+    _check_and_ensure_files()
     prices = pd.read_csv(SELL_PRICES_FILE)
     if sample_stores:
         prices = prices[prices["store_id"].isin(sample_stores)].copy()
@@ -115,6 +127,7 @@ def load_sales_wide(sample_stores: Optional[List[str]] = SAMPLE_STORES) -> pd.Da
     Returns:
         pd.DataFrame: Filtered wide sales records with metadata columns and d_* day columns.
     """
+    _check_and_ensure_files()
     sales = pd.read_csv(SALES_TRAIN_VALIDATION)
     if sample_stores:
         sales = sales[sales["store_id"].isin(sample_stores)].copy()

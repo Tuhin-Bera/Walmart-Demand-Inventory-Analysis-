@@ -3,34 +3,15 @@ backend/services/data_downloader.py
 =====================================
 Automatic Dataset Downloader for Cloud Deployment (Render, Railway, etc.)
 
-WHY THIS EXISTS:
-The M5 Walmart dataset CSV files are 114–194 MB each — too large to commit
-to a git repository (GitHub blocks files > 100 MB). On Render, the app's
-filesystem is ephemeral, so this module downloads the required CSVs from
-cloud storage (Google Drive or any direct URL) at server startup, only if
-the files are not already present on disk.
-
-HOW TO USE:
-1. Upload your CSV files to Google Drive (make them "Anyone with link can view").
-2. Set the following environment variables in Render's dashboard:
-      DATA_SALES_VALIDATION_URL   = <Google Drive / Dropbox share URL>
-      DATA_SALES_EVALUATION_URL   = <Google Drive / Dropbox share URL>
-      DATA_SELL_PRICES_URL        = <Google Drive / Dropbox share URL>
-      DATA_CALENDAR_URL           = <optional — file is tiny (0.1 MB)>
-3. On startup, this module checks if each file exists. If missing, it
-   downloads from the configured URL automatically.
-
-SUPPORTED URL FORMATS:
-- Google Drive share link:  https://drive.google.com/file/d/FILE_ID/view?usp=sharing
-  → Converted internally to direct download via gdown (handles >100 MB confirm page)
-- Dropbox share link:       https://www.dropbox.com/s/.../file.csv?dl=0
-  → dl=0 is rewritten to dl=1 for direct download
-- Any direct HTTP/HTTPS URL (S3, GCS public, etc.)
+Downloads required CSV dataset files (>100MB) from cloud storage (Google Drive)
+if they are not already present on disk in data/.
 """
 
 import os
+import re
 import logging
 from pathlib import Path
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +23,13 @@ _FILE_MAP = {
     "DATA_SELL_PRICES_URL":       "sell_prices.csv",
 }
 
+# ── Built-in Default Fallback URLs (Google Drive) ──────────────────────────────
+# Used if environment variables are not explicitly set in the hosting dashboard
+_DEFAULT_URLS = {
+    "DATA_SALES_VALIDATION_URL": "https://drive.google.com/file/d/1BMf1VgeAkkwmlEsdliqQ3cIr1oxvC6fU/view?usp=sharing",
+    "DATA_SELL_PRICES_URL":      "https://drive.google.com/file/d/10LCz2fDeDwkDMwLe_Eqc9nd0b3_T5B_h/view?usp=sharing",
+}
+
 # Files that are mandatory for the app to start
 _REQUIRED_FILES = {
     "calendar.csv",
@@ -50,8 +38,19 @@ _REQUIRED_FILES = {
 }
 
 
+def _extract_gdrive_id(url: str) -> Optional[str]:
+    """Extract the Google Drive file ID from any share or direct link."""
+    m = re.search(r"/d/([a-zA-Z0-9_-]+)", url)
+    if m:
+        return m.group(1)
+    m = re.search(r"id=([a-zA-Z0-9_-]+)", url)
+    if m:
+        return m.group(1)
+    return None
+
+
 def _is_google_drive_url(url: str) -> bool:
-    return "drive.google.com" in url
+    return "drive.google.com" in url or bool(_extract_gdrive_id(url))
 
 
 def _is_dropbox_url(url: str) -> bool:
@@ -65,37 +64,45 @@ def _make_dropbox_direct(url: str) -> str:
 
 def _download_gdrive(url: str, dest: Path) -> None:
     """Download a Google Drive file using gdown (handles >100 MB confirm bypass)."""
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    file_id = _extract_gdrive_id(url)
+    logger.info(f"  📥 Downloading Google Drive file for {dest.name} (File ID: {file_id}) …")
+
+    # Attempt 1: gdown via ID
     try:
         import gdown
-    except ImportError:
-        raise ImportError(
-            "gdown is required for Google Drive downloads. "
-            "Add 'gdown>=5.1.0' to requirements.txt and rebuild."
-        )
+        if file_id:
+            gdown.download(id=file_id, output=str(dest), quiet=False)
+        else:
+            gdown.download(url, output=str(dest), quiet=False, fuzzy=True)
 
-    # Accept both share links and direct /uc?id= links
-    gdown.download(url, str(dest), quiet=False, fuzzy=True)
+        if dest.exists() and dest.stat().st_size > 1024 * 1024:
+            logger.info(f"  ✅ {dest.name} downloaded successfully via gdown ({dest.stat().st_size // 1_048_576} MB)")
+            return
+    except Exception as e:
+        logger.warning(f"  ⚠️ gdown encountered an error: {e}. Trying direct stream download …")
+
+    # Attempt 2: Fallback to direct requests streaming
+    if file_id:
+        direct_url = f"https://drive.google.com/uc?export=download&id={file_id}"
+        _download_direct(direct_url, dest)
+    else:
+        _download_direct(url, dest)
 
 
 def _download_direct(url: str, dest: Path) -> None:
     """Download any direct HTTP/HTTPS URL with streaming to handle large files."""
     import requests
 
-    logger.info(f"  Downloading {dest.name} from {url[:80]}…")
+    logger.info(f"  📥 Streaming {dest.name} from {url[:80]} …")
     with requests.get(url, stream=True, timeout=300) as r:
         r.raise_for_status()
-        total = int(r.headers.get("content-length", 0))
-        downloaded = 0
         dest.parent.mkdir(parents=True, exist_ok=True)
         with open(dest, "wb") as f:
             for chunk in r.iter_content(chunk_size=8 * 1024 * 1024):  # 8 MB chunks
                 if chunk:
                     f.write(chunk)
-                    downloaded += len(chunk)
-                    if total:
-                        pct = downloaded / total * 100
-                        logger.info(f"  {dest.name}: {pct:.1f}%  ({downloaded // 1_048_576} MB / {total // 1_048_576} MB)")
-    logger.info(f"  ✅ {dest.name} saved ({dest.stat().st_size // 1_048_576} MB)")
+    logger.info(f"  ✅ {dest.name} saved successfully ({dest.stat().st_size // 1_048_576} MB)")
 
 
 def _download_file(url: str, dest: Path) -> None:
@@ -111,35 +118,33 @@ def _download_file(url: str, dest: Path) -> None:
 def ensure_data_files(data_dir: Path) -> None:
     """
     Check that all required CSV files exist in data_dir.
-    Downloads any missing files from their configured URLs.
+    Downloads any missing files from their configured URLs or built-in default URLs.
 
     Args:
         data_dir: Path to the project's data/ directory.
-
-    Raises:
-        FileNotFoundError: If a required file is missing and no download URL is set.
-        Exception: If a download fails.
     """
-    logger.info("🔍 Checking dataset files …")
+    logger.info("🔍 Checking dataset files in data directory …")
     missing_required = []
 
     for env_var, filename in _FILE_MAP.items():
         dest = data_dir / filename
-        url = os.getenv(env_var, "").strip()
+        # Priority: Environment variable -> Built-in default URL
+        url = os.getenv(env_var, "").strip() or _DEFAULT_URLS.get(env_var, "").strip()
 
-        if dest.exists():
+        if dest.exists() and dest.stat().st_size > 1024:
             size_mb = dest.stat().st_size / 1_048_576
             logger.info(f"  ✅ {filename} already present ({size_mb:.1f} MB) — skipping download")
             continue
 
         # File is missing
         if url:
-            logger.info(f"  📥 {filename} not found — downloading from {env_var} …")
+            logger.info(f"  📥 {filename} not found locally — initiating download …")
             try:
                 _download_file(url, dest)
             except Exception as e:
-                logger.error(f"  ❌ Failed to download {filename}: {e}")
-                raise
+                logger.error(f"  ❌ Failed to download {filename} from {url}: {e}")
+                if filename in _REQUIRED_FILES:
+                    missing_required.append(filename)
         else:
             if filename in _REQUIRED_FILES:
                 missing_required.append(filename)
@@ -148,21 +153,12 @@ def ensure_data_files(data_dir: Path) -> None:
                     f"     Set env var {env_var} with a download URL, "
                     f"or place the file at: {dest}"
                 )
-            else:
-                logger.warning(
-                    f"  ⚠️  Optional file {filename} not found and {env_var} not set — skipping."
-                )
 
     if missing_required:
         raise FileNotFoundError(
-            f"Required data files are missing and no download URL was configured:\n"
-            f"  {missing_required}\n\n"
-            f"Set the following environment variables in Render → Environment:\n"
-            + "\n".join(
-                f"  {v}=<your URL>"
-                for v, f in _FILE_MAP.items() if f in missing_required
-            )
+            f"Required data files are missing and could not be downloaded:\n"
+            f"  {missing_required}\n"
+            f"Please verify network access or configure DATA_SALES_VALIDATION_URL and DATA_SELL_PRICES_URL."
         )
 
-    logger.info("✅ All required dataset files are present.")
-
+    logger.info("✅ All required dataset files are verified.")
