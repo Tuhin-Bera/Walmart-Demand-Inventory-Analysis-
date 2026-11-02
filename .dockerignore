@@ -19,9 +19,12 @@ env/
 .env
 .env.local
 
-# Notebooks & IDE configurations
+# Notebooks, Documentation & Presentation
 .ipynb_checkpoints
 notebooks/
+presentation/
+report/
+generate_presentation.py
 .vscode/
 .idea/
 

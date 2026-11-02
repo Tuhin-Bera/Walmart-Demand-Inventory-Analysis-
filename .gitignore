@@ -109,3 +109,8 @@ data/*.csv
 !data/calendar.csv
 !data/.gitkeep
 
+# ── Presentation & Reports ───────────────────────────────────────────────────
+presentation/
+report/
+generate_presentation.py
+
