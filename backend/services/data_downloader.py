@@ -193,7 +193,9 @@ def ensure_data_files(data_dir: Path) -> None:
         # Priority: Environment variable -> Built-in default URL
         url = os.getenv(env_var, "").strip() or _DEFAULT_URLS.get(env_var, "").strip()
 
-        if dest.exists() and dest.stat().st_size > 1024 * 1024:
+        # Check if file exists and has valid content (calendar.csv is ~103KB, others are >100MB)
+        min_size = 1000 if filename == "calendar.csv" else 1024 * 1024
+        if dest.exists() and dest.stat().st_size > min_size:
             size_mb = dest.stat().st_size / 1_048_576
             logger.info(f"  ✅ {filename} already present ({size_mb:.1f} MB) — skipping download")
             continue
@@ -220,3 +222,11 @@ def ensure_data_files(data_dir: Path) -> None:
         )
 
     logger.info("✅ All required dataset files are verified.")
+
+
+if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+    from backend.config import DATA_DIR
+    ensure_data_files(DATA_DIR)
