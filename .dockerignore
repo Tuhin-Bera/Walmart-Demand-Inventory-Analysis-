@@ -29,6 +29,7 @@ generate_presentation.py
 .idea/
 
 # Testing & Logs
+test/
 test_pipeline.py
 *.log
 .pytest_cache/

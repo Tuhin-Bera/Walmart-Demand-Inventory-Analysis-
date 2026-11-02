@@ -109,8 +109,9 @@ data/*.csv
 !data/calendar.csv
 !data/.gitkeep
 
-# ── Presentation & Reports ───────────────────────────────────────────────────
+# ── Presentation, Reports & Test Artifacts ────────────────────────────────────
 presentation/
 report/
+test/
 generate_presentation.py
 
