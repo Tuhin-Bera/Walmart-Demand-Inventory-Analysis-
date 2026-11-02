@@ -145,3 +145,4 @@ All 4 test components execute sequentially:
 - `test_02_inventory_stockout_rate`: Validates that prescriptive optimization strictly lowers stockout rate.
 - `test_03_overstock_and_excess_inventory`: Validates that excess inventory is reduced versus naive rule-of-thumb buffering.
 - `test_04_reorder_strategy_service_level_and_cost`: Asserts achieved service level meets or exceeds operational requirements ($> 85\%$, targeting $92.6\%$) at minimum total cost.
+
