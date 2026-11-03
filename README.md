@@ -1,14 +1,24 @@
 # Nationwide Demand Forecasting & Prescriptive Inventory Optimization
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-AWS%20EC2-FF9900?logo=amazon-aws&logoColor=white)](http://13.211.76.227/)
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![LightGBM](https://img.shields.io/badge/LightGBM-4.3+-brightgreen?logo=scikitlearn&logoColor=white)](https://lightgbm.readthedocs.io/)
 [![Google OR-Tools](https://img.shields.io/badge/OR--Tools-GLOP%20Solver-4285F4?logo=google&logoColor=white)](https://developers.google.com/optimization)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
-[![Render](https://img.shields.io/badge/Render-Deploy%20Ready-46E3B7?logo=render&logoColor=white)](https://render.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 An enterprise-grade machine learning and mathematical operations research platform engineered for large-scale retail supply chains. Built on the **Walmart M5 Point-of-Sale benchmark dataset** (1,913 days across 3,049 SKUs in California, Texas, and Wisconsin), the platform forecasts zero-inflated consumer demand across multi-week horizons and maps forecast probability distributions into cost-optimal purchase orders ($Q^*$) using constrained linear programming.
+
+---
+
+## 🌐 Live Production Application
+
+The platform is deployed and running live on **AWS EC2**:
+
+- **🚀 Live Web Application Dashboard:** [http://13.211.76.227/](http://13.211.76.227/)
+- **📚 Interactive Swagger API Documentation:** [http://13.211.76.227/docs](http://13.211.76.227/docs)
+- **🩺 Service Health Probe:** [http://13.211.76.227/health](http://13.211.76.227/health)
 
 ---
 
@@ -217,8 +227,34 @@ uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
 
 ---
 
-## Cloud Deployment (Render PaaS)
+## Cloud Deployment
 
+### AWS EC2 (Production Deployment)
+The application is currently running live on an **AWS EC2** instance:
+- **Live Dashboard:** [http://13.211.76.227/](http://13.211.76.227/)
+- **Interactive Swagger Docs:** [http://13.211.76.227/docs](http://13.211.76.227/docs)
+
+To deploy on your own AWS EC2 instance (Ubuntu 22.04 / 24.04 LTS):
+```bash
+# 1. Enable 2GB swap space (recommended for 1GB RAM instances)
+sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile
+sudo mkswap /swapfile && sudo swapon /swapfile
+
+# 2. Install system packages & OpenMP for LightGBM
+sudo apt update && sudo apt install -y python3-pip python3-venv git libgomp1
+
+# 3. Clone and install
+git clone https://github.com/Tuhin-Bera/Walmart-Demand-Inventory-Analysis-.git
+cd Walmart-Demand-Inventory-Analysis-
+python3 -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+python backend/services/data_downloader.py
+
+# 4. Run as a background service on port 80
+nohup sudo $(which uvicorn) backend.main:app --host 0.0.0.0 --port 80 > app.log 2>&1 &
+```
+
+### Render Deployment (PaaS)
 The repository includes a ready-to-use `render.yaml` Blueprint designed for zero-touch cloud deployment:
 
 1. Fork or push this repository to GitHub.
